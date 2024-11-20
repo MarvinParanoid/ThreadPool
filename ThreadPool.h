@@ -39,11 +39,7 @@ public:
     }
 
     ~ThreadPool() {
-        stopped = true;
-        cv.notify_all();
-        for (auto &t: threads) {
-            t.join();
-        }
+        stopAll();
     }
 
     template<typename F, typename... Args>
@@ -62,7 +58,17 @@ public:
         return res;
     }
 
-    void wait() {
+    void waitAll() {
+        while (!tasks.empty()) {
+            std::this_thread::yield();
+        }
+    }
+
+    void stopAll() {
         stopped = true;
+        cv.notify_all();
+        for (auto &t: threads) {
+            t.join();
+        }
     }
 };
